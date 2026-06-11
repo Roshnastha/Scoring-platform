@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-bg-base: #F2F2F2; /* Soft industrial grey */
+  --color-bg-surface: #FFFFFF;
+  --color-bg-card: #FFFFFF;
+  
+  --color-text-primary: #1C1C1C;
+  --color-text-secondary: #5A5A5A;
+  --color-text-muted: #999999;
+  
+  /* Functional accents (Dieter Rams style) */
+  --color-accent-primary: #DE6B48; /* Muted orange */
+  --color-accent-hover: #C25636;
+  --color-accent-focus: #F4A261;
+  
+  /* Soft status colors */
+  --color-status-new-bg: #EAEFEC;
+  --color-status-new-fg: #4F6B55;
+  
+  --color-status-rev-bg: #FCF4E3;
+  --color-status-rev-fg: #9C7114;
+  
+  --color-status-hir-bg: #E3EEFC;
+  --color-status-hir-fg: #295E9A;
+  
+  --color-status-rej-bg: #FCE8E6;
+  --color-status-rej-fg: #963A32;
+  
+  --color-border-light: #EBEBEB;
+  --color-border-dark: #D4D4D4;
+
+  --font-sans: 'Epilogue', sans-serif;
+  
+  /* Soft, realistic shadows simulating physical objects */
+  --shadow-soft: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 10px -2px rgba(0, 0, 0, 0.03);
+  --shadow-float: 0 20px 40px -10px rgba(0, 0, 0, 0.08), 0 8px 16px -4px rgba(0, 0, 0, 0.04);
+  --shadow-inset-soft: inset 0 2px 6px rgba(0,0,0,0.04);
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-bg-base text-text-primary min-h-screen antialiased;
+  }
+}
+
+@layer components {
+  /* Form Controls - Input fields look like physical recessed slots */
+  .form-control {
+    @apply bg-[#F9F9F9] border border-border-light text-text-primary px-4 py-3 rounded-xl transition-all text-sm outline-none shadow-inset-soft focus:bg-white focus:border-border-dark focus:ring-4 focus:ring-border-light/50;
+  }
+  
+  /* Buttons - Pill shaped, raised like physical hardware buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 font-sans text-sm font-semibold rounded-full transition-all cursor-pointer border border-transparent;
+  }
+  .btn-primary {
+    @apply bg-accent-primary text-white shadow-[0_4px_12px_rgba(222,107,72,0.3)] hover:bg-accent-hover hover:shadow-[0_6px_16px_rgba(222,107,72,0.4)] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none;
+  }
+  .btn-secondary {
+    @apply bg-white text-text-primary border-border-dark shadow-sm hover:bg-gray-50 hover:shadow active:bg-gray-100;
+  }
+  .btn-ghost {
+    @apply bg-transparent text-text-secondary hover:text-text-primary hover:bg-black/5 active:bg-black/10;
+  }
+  .btn:disabled {
+    @apply opacity-50 cursor-not-allowed transform-none shadow-none;
+  }
+}
