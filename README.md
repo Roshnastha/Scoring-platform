@@ -1,7 +1,13 @@
-# TechKraft Candidate Scoring Platform
+# Candidate Scoring Platform
 
-An internal recruitment review dashboard for TechKraft's hiring team.  
-Reviewers score candidates across categories and view AI-generated summaries. Admins get full visibility including internal notes and all reviewer scores.
+A full-stack web application for evaluating and scoring job candidates with real-time AI-powered insights, internal notes, and candidate management capabilities.
+
+**Features:**
+- 🎯 Multi-criteria candidate scoring
+- 🤖 AI-generated candidate summaries  
+- 📝 Internal notes and reviewer feedback
+- 👥 Role-based access (Admin & Reviewer)
+- 🔐 Secure authentication
 
 ---
 
@@ -49,8 +55,8 @@ Reviewers score candidates across categories and view AI-generated summaries. Ad
 
 ```bash
 # 1. Clone
-git clone https://github.com/anilstha1/candidate_scoring_platform.git
-cd candidate_scoring_platform
+git clone https://github.com/Roshnastha/Scoring-platform.git
+cd Scoring-platform
 
 # 2. Copy environment template
 cp .env.example backend/.env
@@ -126,9 +132,9 @@ An admin user is **auto-created** when the FastAPI application starts:
 
 | Email | Password | Role |
 |---|---|---|
-| `admin@techkraft.com` | `admin123` | admin |
+| `admin@example.com` | `admin123` | admin |
 
-> Register additional users via `POST /api/v1/auth/register` — all registrations are hardcoded to the `reviewer` role. Role cannot be set from the client.
+> Register additional users via `POST /api/v1/auth/register` — all registrations default to the `reviewer` role. Role cannot be set from the client.
 
 ### Optional: Seed Mock Data
 
@@ -141,7 +147,7 @@ python seed/seed.py
 ```
 
 This will create:
-- Two reviewer accounts (`reviewer1@techkraft.com`, `reviewer2@techkraft.com` — password: `reviewer123`)
+- Two reviewer accounts (`reviewer1@example.com`, `reviewer2@example.com` — password: `reviewer123`)
 - A batch of mock candidates with sample score data.
 
 ---
