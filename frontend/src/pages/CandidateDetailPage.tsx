@@ -1,80 +1,84 @@
-import {useState, useEffect, useCallback} from "react";
-import {useParams, Link, useNavigate} from "react-router-dom";
-import {
-  getCandidate,
-  deleteCandidate,
-  updateStatus,
-  type Candidate,
-} from "../api/candidates";
-import type {Score} from "../types";
-import {getInitials} from "../utils";
-import {useSSEStream} from "../hooks/useSSEStream";
-import {ArrowLeft, Archive, Radio, BarChart2} from "lucide-react";
-import ScoreForm from "../components/ScoreForm";
-import AISummaryPanel from "../components/AISummaryPanel";
-import InternalNotesPanel from "../components/InternalNotesPanel";
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { getCandidate, deleteCandidate, updateStatus, type Candidate } from '../api/candidates';
+import type { Score } from '../types';
+import { getInitials } from '../utils';
+import { useSSEStream } from '../hooks/useSSEStream';
+import { ArrowLeft, Archive, Radio, BarChart2, Sparkles } from 'lucide-react';
+import ScoreForm from '../components/ScoreForm';
+import AISummaryPanel from '../components/AISummaryPanel';
+import InternalNotesPanel from '../components/InternalNotesPanel';
+
+const STATUS_BADGE: Record<string, string> = {
+  new:      'badge-new',
+  reviewed: 'badge-reviewed',
+  hired:    'badge-hired',
+  rejected: 'badge-rejected',
+  archived: 'badge-archived',
+};
+
+const SCORE_BAR: Record<number, string> = {
+  1: 'bg-red-400',
+  2: 'bg-orange-400',
+  3: 'bg-amber-400',
+  4: 'bg-lime-500',
+  5: 'bg-emerald-500',
+};
+
+const AVATAR_PALETTES = [
+  'bg-violet-100 text-violet-700',
+  'bg-blue-100 text-blue-700',
+  'bg-emerald-100 text-emerald-700',
+  'bg-amber-100 text-amber-700',
+  'bg-rose-100 text-rose-700',
+  'bg-indigo-100 text-indigo-700',
+  'bg-cyan-100 text-cyan-700',
+];
+function avatarPalette(name: string) {
+  const sum = [...name].reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return AVATAR_PALETTES[sum % AVATAR_PALETTES.length];
+}
 
 export default function CandidateDetailPage() {
-  const {id} = useParams<{id: string}>();
-  const navigate = useNavigate();
-  const role = localStorage.getItem("role") || "reviewer";
+  const { id }    = useParams<{ id: string }>();
+  const navigate  = useNavigate();
+  const role      = localStorage.getItem('role') || 'reviewer';
 
-  const [candidate, setCandidate] = useState<Candidate | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [deleting, setDeleting] = useState(false);
+  const [candidate,      setCandidate]      = useState<Candidate | null>(null);
+  const [loading,        setLoading]        = useState(true);
+  const [error,          setError]          = useState('');
+  const [deleting,       setDeleting]       = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const handleScoresUpdate = useCallback((scores: Score[]) => {
-    setCandidate((prev) => (prev ? {...prev, scores} : prev));
+    setCandidate((prev) => (prev ? { ...prev, scores } : prev));
   }, []);
 
-  const isLive = useSSEStream({
-    candidateId: Number(id),
-    onScores: handleScoresUpdate,
-  });
+  const isLive = useSSEStream({ candidateId: Number(id), onScores: handleScoresUpdate });
 
-  const load = useCallback(
-    async (isInitial = true) => {
-      if (!id) return;
-      if (isInitial) setLoading(true);
-      try {
-        const data = await getCandidate(Number(id));
-        setCandidate(data);
-      } catch {
-        setError("Candidate not found or you lack access.");
-      } finally {
-        if (isInitial) setLoading(false);
-      }
-    },
-    [id],
-  );
+  const load = useCallback(async (isInitial = true) => {
+    if (!id) return;
+    if (isInitial) setLoading(true);
+    try {
+      const data = await getCandidate(Number(id));
+      setCandidate(data);
+    } catch {
+      setError('Candidate not found or you lack access.');
+    } finally {
+      if (isInitial) setLoading(false);
+    }
+  }, [id]);
 
-  useEffect(() => {
-    void load(true);
-  }, [load]);
-
-  async function handleSummaryGenerated(summary: string) {
-    setCandidate((prev) => (prev ? {...prev, ai_summary: summary} : prev));
-  }
-
-  async function handleScoreSubmitted() {
-    await load(false); // refresh to show new score without showing spinner
-  }
-
-  async function handleNotesUpdated(notes: string) {
-    setCandidate((prev) => (prev ? {...prev, internal_notes: notes} : prev));
-  }
+  useEffect(() => { void load(true); }, [load]);
 
   async function handleStatusChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const newStatus = e.target.value;
     if (!candidate) return;
     setUpdatingStatus(true);
     try {
-      const updated = await updateStatus(candidate.id, newStatus);
+      const updated = await updateStatus(candidate.id, e.target.value);
       setCandidate(updated);
     } catch {
-      alert("Failed to update status.");
+      alert('Failed to update status.');
     } finally {
       setUpdatingStatus(false);
     }
@@ -82,224 +86,198 @@ export default function CandidateDetailPage() {
 
   async function handleDelete() {
     if (!candidate) return;
-    if (
-      !window.confirm(
-        `Archive ${candidate.name}? This is a soft delete — they won't appear in search results.`,
-      )
-    )
-      return;
+    if (!window.confirm(`Archive ${candidate.name}? They won't appear in search results.`)) return;
     setDeleting(true);
     try {
       await deleteCandidate(candidate.id);
-      navigate("/candidates");
+      navigate('/candidates');
     } catch {
-      alert("Failed to archive candidate.");
+      alert('Failed to archive candidate.');
       setDeleting(false);
     }
   }
 
-  if (loading)
+  if (loading) {
     return (
-      <div className="max-w-[1200px] mx-auto p-6 md:p-12 flex justify-center py-20">
-        <div className="w-8 h-8 border-4 border-border-light border-t-text-muted rounded-full animate-spin"></div>
+      <div className="flex justify-center pt-24">
+        <div className="w-5 h-5 border-2 border-border-strong border-t-accent rounded-full animate-spin" />
       </div>
     );
-  if (error || !candidate)
+  }
+  if (error || !candidate) {
     return (
-      <div className="max-w-[1200px] mx-auto p-6 md:p-12">
-        <div className="bg-status-rej-bg text-status-rej-fg px-6 py-4 rounded-2xl text-sm font-medium mb-6 shadow-soft">
-          {error || "Candidate not found."}
+      <div className="p-8">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
+          {error || 'Candidate not found.'}
         </div>
-        <Link
-          to="/candidates"
-          className="btn btn-secondary inline-flex items-center gap-2"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back to list
+        <Link to="/candidates" className="btn btn-secondary">
+          <ArrowLeft className="w-4 h-4" /> Back
         </Link>
       </div>
     );
+  }
 
   const avgScore = candidate.scores.length
-    ? (
-        candidate.scores.reduce((s, sc) => s + sc.score, 0) /
-        candidate.scores.length
-      ).toFixed(1)
+    ? (candidate.scores.reduce((s, sc) => s + sc.score, 0) / candidate.scores.length).toFixed(1)
     : null;
 
   return (
-    <div className="max-w-[1200px] mx-auto p-6 md:p-12 animate-[fade-up_0.6s_cubic-bezier(0.16,1,0.3,1)_forwards]">
+    <div className="p-8 max-w-[1100px]">
+      {/* Back */}
       <Link
         to="/candidates"
-        className="inline-flex items-center gap-2 text-sm font-semibold text-text-secondary hover:text-text-primary transition-colors mb-8"
+        className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text-primary transition-colors mb-6"
         id="back-link"
       >
         <ArrowLeft className="w-4 h-4" /> Back to candidates
       </Link>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[2.5fr_1fr] gap-8 items-start">
-        <div className="flex flex-col gap-8">
-          <div className="flex flex-col bg-white rounded-3xl shadow-soft overflow-hidden">
-            <div className="flex flex-col md:flex-row w-full">
-              <div className="w-full md:w-48 h-48 bg-bg-base flex items-center justify-center font-bold text-6xl text-text-muted shrink-0 rounded-sm">
-                {getInitials(candidate.name)}
-              </div>
-              <div className="p-8 md:p-10 flex-1">
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div>
-                    <h2 className="text-3xl font-bold leading-tight mb-1 text-text-primary">
-                      {candidate.name}
-                    </h2>
-                    <p className="text-text-secondary font-medium">
-                      {candidate.email}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    {role === "admin" ? (
-                      <select
-                        className={`text-xs font-semibold uppercase px-3 py-1.5 rounded-full outline-none cursor-pointer border border-border-light shadow-sm transition-colors ${updatingStatus ? "opacity-50" : "hover:bg-gray-50"}`}
-                        value={candidate.status}
-                        onChange={handleStatusChange}
-                        disabled={updatingStatus}
-                      >
-                        <option value="new">New</option>
-                        <option value="reviewed">Reviewed</option>
-                        <option value="hired">Hired</option>
-                        <option value="rejected">Rejected</option>
-                      </select>
-                    ) : (
-                      <span
-                        className={`text-xs font-semibold uppercase px-3 py-1 rounded-full bg-border-light text-text-secondary`}
-                      >
-                        {candidate.status}
-                      </span>
-                    )}
-                    {avgScore && (
-                      <span className="text-sm font-medium text-text-muted mt-2">
-                        Avg:{" "}
-                        <strong className="text-text-primary text-lg ml-1">
-                          {avgScore}/5
-                        </strong>
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="inline-block bg-bg-base px-4 py-2 rounded-xl text-sm font-semibold text-text-primary mb-6">
-                  {candidate.role_applied}
-                </div>
-
-                {candidate.skills.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {candidate.skills.map((s) => (
-                      <span
-                        key={s}
-                        className="text-xs font-medium bg-[#F5F5F5] text-text-secondary px-3 py-1.5 rounded-full"
-                      >
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {role === "admin" && (
-              <div className="p-6 md:px-10 border-t border-border-light flex justify-end bg-gray-50/50">
-                <button
-                  id="delete-candidate-btn"
-                  className="btn bg-gray-200 text-text-secondary hover:bg-gray-300 hover:text-red-700 inline-flex items-center gap-2"
-                  onClick={handleDelete}
-                  disabled={deleting}
-                >
-                  <Archive className="w-4 h-4" />
-                  {deleting ? "Archiving…" : "Archive Candidate"}
-                </button>
-              </div>
-            )}
+      {/* Candidate header */}
+      <div className="card p-6 mb-6">
+        <div className="flex items-start gap-5 flex-wrap">
+          <div className={`w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold shrink-0 ${avatarPalette(candidate.name)}`}>
+            {getInitials(candidate.name)}
           </div>
 
-          <div className="bg-white rounded-3xl p-8 md:p-10 shadow-soft relative overflow-hidden">
-            <h3 className="text-xl font-bold text-text-primary mb-6">
-              AI Summary
-            </h3>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 flex-wrap mb-1">
+              <h1 className="text-xl font-bold text-text-primary">{candidate.name}</h1>
+              <span className={`badge capitalize ${STATUS_BADGE[candidate.status] ?? 'badge-archived'}`}>
+                {candidate.status}
+              </span>
+              {isLive && (
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                  <Radio className="w-3 h-3 animate-pulse" /> Live
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-text-muted mb-2">{candidate.email}</p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="text-sm font-medium text-text-secondary bg-bg-subtle px-2.5 py-1 rounded-lg border border-border">
+                {candidate.role_applied}
+              </span>
+              {candidate.skills.map((s) => (
+                <span key={s} className="text-xs text-text-muted bg-bg-subtle px-2 py-0.5 rounded border border-border">
+                  {s}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0 flex-wrap">
+            {avgScore && (
+              <div className="text-center">
+                <div className="text-2xl font-bold text-text-primary">{avgScore}</div>
+                <div className="text-xs text-text-muted">avg / 5</div>
+              </div>
+            )}
+            {role === 'admin' && (
+              <select
+                className={`form-control text-xs font-semibold cursor-pointer w-auto ${updatingStatus ? 'opacity-50' : ''}`}
+                value={candidate.status}
+                onChange={handleStatusChange}
+                disabled={updatingStatus}
+              >
+                <option value="new">New</option>
+                <option value="reviewed">Reviewed</option>
+                <option value="hired">Hired</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            )}
+            {role === 'admin' && (
+              <button
+                id="delete-candidate-btn"
+                className="btn btn-danger"
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                <Archive className="w-4 h-4" />
+                {deleting ? 'Archiving…' : 'Archive'}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Two-column layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
+        {/* Main column */}
+        <div className="flex flex-col gap-6">
+          {/* AI Summary */}
+          <div className="card p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="w-4 h-4 text-accent" />
+              <h2 className="text-sm font-semibold text-text-primary">AI Summary</h2>
+            </div>
             <AISummaryPanel
               candidateId={candidate.id}
               existingSummary={candidate.ai_summary}
-              onGenerated={handleSummaryGenerated}
+              onGenerated={(s) => setCandidate((prev) => prev ? { ...prev, ai_summary: s } : prev)}
             />
           </div>
 
-          {role === "admin" && (
-            <InternalNotesPanel
-              candidateId={candidate.id}
-              initialNotes={candidate.internal_notes || ""}
-              onSaved={handleNotesUpdated}
-            />
+          {/* Internal Notes (admin only) */}
+          {role === 'admin' && (
+            <div className="card p-6">
+              <InternalNotesPanel
+                candidateId={candidate.id}
+                initialNotes={candidate.internal_notes || ''}
+                onSaved={(notes) => setCandidate((prev) => prev ? { ...prev, internal_notes: notes } : prev)}
+              />
+            </div>
           )}
 
-          <div className="bg-white rounded-3xl p-8 md:p-10 shadow-soft">
-            <div className="flex items-center justify-between mb-8 border-b border-border-light pb-4">
-              <div className="flex items-center gap-3">
-                <h3 className="text-xl font-bold text-text-primary">Scores</h3>
-                {isLive && (
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
-                    <Radio className="w-3 h-3 animate-pulse" />
-                    Live
-                  </span>
-                )}
+          {/* Scores */}
+          <div className="card p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <BarChart2 className="w-4 h-4 text-text-muted" />
+                <h2 className="text-sm font-semibold text-text-primary">
+                  Scores
+                  <span className="ml-2 text-text-muted font-normal">({candidate.scores.length})</span>
+                </h2>
               </div>
-              {role === "reviewer" && (
-                <span className="text-sm font-medium text-text-muted">
-                  Showing your scores only
-                </span>
+              {role === 'reviewer' && (
+                <span className="text-xs text-text-muted">Your scores only</span>
               )}
             </div>
 
             {candidate.scores.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-bg-base rounded-full flex items-center justify-center mx-auto mb-4">
-                  <BarChart2 className="w-8 h-8 text-text-muted" />
+              <div className="flex flex-col items-center py-10 text-center">
+                <div className="w-9 h-9 rounded-lg bg-bg-subtle flex items-center justify-center mb-3">
+                  <BarChart2 className="w-4 h-4 text-text-muted" />
                 </div>
-                <div className="text-lg font-bold mb-2 text-text-primary">
-                  No scores yet
-                </div>
-                <div className="text-sm text-text-secondary">
-                  Use the form to submit the first score.
-                </div>
+                <p className="text-sm font-medium text-text-primary">No scores yet</p>
+                <p className="text-xs text-text-muted mt-1">Use the form to submit the first score.</p>
               </div>
             ) : (
-              <div className="flex flex-col gap-6">
-                {candidate.scores.map((sc, i) => (
+              <div className="flex flex-col gap-4">
+                {candidate.scores.map((sc: Score, i: number) => (
                   <div
                     key={sc.id}
-                    className={`flex flex-col md:flex-row gap-6 md:items-start ${i !== candidate.scores.length - 1 ? "border-b border-border-light pb-6" : ""}`}
+                    className={`flex gap-4 items-start ${i !== candidate.scores.length - 1 ? 'pb-4 border-b border-border' : ''}`}
                     id={`score-${sc.id}`}
                   >
-                    <div className="w-44 shrink-0">
-                      <div className="font-bold text-text-primary">
-                        {sc.category}
-                      </div>
-                      <div className="text-xs font-medium text-text-muted mt-1">
-                        Reviewer #{sc.reviewer_id}
-                      </div>
+                    <div className="w-36 shrink-0">
+                      <p className="text-sm font-semibold text-text-primary">{sc.category}</p>
+                      <p className="text-xs text-text-muted mt-0.5">Reviewer #{sc.reviewer_id}</p>
                     </div>
-
                     <div className="flex-1">
-                      <div className="flex items-center gap-4 mb-2">
-                        <div className="flex-1 h-3 bg-bg-base rounded-full overflow-hidden shadow-inset-soft">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="flex-1 h-2 bg-bg-subtle rounded-full overflow-hidden border border-border">
                           <div
-                            className="h-full bg-text-primary rounded-full transition-all duration-700"
-                            style={{width: `${sc.score * 20}%`}}
+                            className={`h-full rounded-full transition-all duration-500 ${SCORE_BAR[sc.score] ?? 'bg-accent'}`}
+                            style={{ width: `${sc.score * 20}%` }}
                           />
                         </div>
-                        <span className="font-bold w-8 text-right text-text-primary">
+                        <span className="text-sm font-bold text-text-primary w-8 text-right shrink-0">
                           {sc.score}/5
                         </span>
                       </div>
                       {sc.note && (
-                        <div className="text-sm mt-3 bg-[#F9F9F9] p-4 rounded-2xl text-text-secondary leading-relaxed border border-border-light">
+                        <p className="text-sm text-text-secondary bg-bg-subtle border border-border rounded-lg px-3 py-2 leading-relaxed">
                           {sc.note}
-                        </div>
+                        </p>
                       )}
                     </div>
                   </div>
@@ -309,54 +287,31 @@ export default function CandidateDetailPage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-8">
-          <div className="bg-white rounded-3xl p-8 shadow-soft">
-            <h3 className="text-xl font-bold text-text-primary mb-6">
-              Submit Score
-            </h3>
-            <ScoreForm
-              candidateId={candidate.id}
-              onSubmitted={handleScoreSubmitted}
-            />
+        {/* Sidebar */}
+        <div className="flex flex-col gap-4">
+          {/* Score form */}
+          <div className="card p-5">
+            <h2 className="text-sm font-semibold text-text-primary mb-4">Submit Score</h2>
+            <ScoreForm candidateId={candidate.id} onSubmitted={() => load(false)} />
           </div>
 
-          <div className="bg-white rounded-3xl shadow-soft overflow-hidden">
-            <div className="px-6 py-5 bg-gray-50/50 border-b border-border-light">
-              <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
-                Details
-              </h3>
+          {/* Details */}
+          <div className="card overflow-hidden">
+            <div className="px-4 py-3 border-b border-border bg-bg-subtle">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-text-muted">Details</h2>
             </div>
-            <div className="flex flex-col p-2">
-              <div className="flex justify-between p-4 text-sm hover:bg-gray-50 rounded-xl transition-colors">
-                <span className="text-text-secondary font-medium">
-                  Candidate ID
-                </span>
-                <span className="font-bold text-text-primary">
-                  #{candidate.id}
-                </span>
-              </div>
-              <div className="flex justify-between p-4 text-sm hover:bg-gray-50 rounded-xl transition-colors">
-                <span className="text-text-secondary font-medium">
-                  Applied for
-                </span>
-                <span className="font-bold text-text-primary">
-                  {candidate.role_applied}
-                </span>
-              </div>
-              <div className="flex justify-between p-4 text-sm hover:bg-gray-50 rounded-xl transition-colors">
-                <span className="text-text-secondary font-medium">Created</span>
-                <span className="font-bold text-text-primary">
-                  {new Date(candidate.created_at).toLocaleDateString()}
-                </span>
-              </div>
-              <div className="flex justify-between p-4 text-sm hover:bg-gray-50 rounded-xl transition-colors">
-                <span className="text-text-secondary font-medium">
-                  Total scores
-                </span>
-                <span className="font-bold text-text-primary">
-                  {candidate.scores.length}
-                </span>
-              </div>
+            <div className="divide-y divide-border">
+              {[
+                ['ID', `#${candidate.id}`],
+                ['Role', candidate.role_applied],
+                ['Created', new Date(candidate.created_at).toLocaleDateString()],
+                ['Total scores', String(candidate.scores.length)],
+              ].map(([label, value]) => (
+                <div key={label} className="flex justify-between items-center px-4 py-3">
+                  <span className="text-xs text-text-muted">{label}</span>
+                  <span className="text-xs font-semibold text-text-primary">{value}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

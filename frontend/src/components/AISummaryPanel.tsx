@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { generateSummary } from '../api/candidates';
-import { Bot, RefreshCw, Loader2 } from 'lucide-react';
+import { Sparkles, RefreshCw, Loader2 } from 'lucide-react';
 
 interface Props {
   candidateId: number;
@@ -10,7 +10,7 @@ interface Props {
 
 export default function AISummaryPanel({ candidateId, existingSummary, onGenerated }: Props) {
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState('');
+  const [error,   setError]   = useState('');
   const [summary, setSummary] = useState<string | null>(existingSummary);
 
   async function handleGenerate() {
@@ -27,50 +27,53 @@ export default function AISummaryPanel({ candidateId, existingSummary, onGenerat
     }
   }
 
+  if (loading) {
+    return (
+      <div className="bg-accent-subtle border border-accent/20 rounded-lg p-4 flex items-center gap-3">
+        <Loader2 className="w-4 h-4 text-accent animate-spin shrink-0" />
+        <p className="text-sm text-accent font-medium">Analyzing candidate profile…</p>
+      </div>
+    );
+  }
+
+  if (summary) {
+    return (
+      <div>
+        <div className="bg-bg-subtle border border-border rounded-lg p-4 mb-3">
+          <p className="text-sm text-text-primary leading-relaxed whitespace-pre-wrap">{summary}</p>
+        </div>
+        {error && (
+          <p className="text-sm text-red-600 mb-3">{error}</p>
+        )}
+        <button
+          id="regenerate-summary-btn"
+          className="btn btn-ghost text-xs"
+          onClick={handleGenerate}
+        >
+          <RefreshCw className="w-3.5 h-3.5" />
+          Regenerate
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div>
-      {loading ? (
-        <div className="bg-[#F9F9F9] rounded-2xl p-6 border border-border-light shadow-inset-soft">
-          <div className="flex items-center gap-3">
-            <Loader2 className="w-5 h-5 text-text-primary animate-spin shrink-0" />
-            <p className="text-sm font-medium text-text-secondary">
-              Analyzing candidate data…
-            </p>
-          </div>
-        </div>
-      ) : summary ? (
-        <div>
-          <div className="bg-[#F9F9F9] rounded-2xl p-6 md:p-8 mb-6 border border-border-light shadow-inset-soft">
-            <p className="text-[15px] leading-relaxed text-text-primary whitespace-pre-wrap">{summary}</p>
-          </div>
-          <button
-            id="regenerate-summary-btn"
-            className="btn btn-ghost text-xs inline-flex items-center gap-2"
-            onClick={handleGenerate}
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Regenerate Analysis
-          </button>
-        </div>
-      ) : (
-        <div className="bg-[#F9F9F9] rounded-2xl p-8 border border-border-light text-center shadow-inset-soft">
-          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-border-light">
-            <Bot className="w-6 h-6 text-text-muted" />
-          </div>
-          <p className="text-sm font-medium text-text-secondary mb-6 max-w-md mx-auto">
-            No AI summary generated. The system can analyze the candidate's scores, notes, and profile to provide an objective summary.
-          </p>
-          {error && <div className="bg-status-rej-bg text-status-rej-fg px-4 py-3 rounded-2xl text-sm font-medium mb-4">{error}</div>}
-          <button
-            id="generate-summary-btn"
-            className="btn btn-secondary inline-flex items-center gap-2"
-            onClick={handleGenerate}
-          >
-            <Bot className="w-4 h-4" />
-            Generate Summary
-          </button>
-        </div>
-      )}
+    <div className="border border-dashed border-border rounded-lg p-6 text-center">
+      <div className="w-9 h-9 rounded-lg bg-bg-subtle flex items-center justify-center mx-auto mb-3">
+        <Sparkles className="w-4 h-4 text-text-muted" />
+      </div>
+      <p className="text-sm text-text-secondary mb-4">
+        No summary generated yet. AI will analyze scores, notes, and skills to provide an objective overview.
+      </p>
+      {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
+      <button
+        id="generate-summary-btn"
+        className="btn btn-secondary"
+        onClick={handleGenerate}
+      >
+        <Sparkles className="w-4 h-4" />
+        Generate Summary
+      </button>
     </div>
   );
 }

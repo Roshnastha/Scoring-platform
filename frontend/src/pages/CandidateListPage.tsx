@@ -1,28 +1,47 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { getCandidates, type Candidate, type CandidateFilters } from '../api/candidates';
-import { getInitials, STATUS_DOT_COLORS } from '../utils';
+import { getInitials } from '../utils';
 import FilterBar from '../components/FilterBar';
 import Pagination from '../components/Pagination';
+import { Plus, Search } from 'lucide-react';
 
 const STATUS_OPTIONS = ['', 'new', 'reviewed', 'hired', 'rejected'];
+
+const STATUS_BADGE: Record<string, string> = {
+  new:      'badge-new',
+  reviewed: 'badge-reviewed',
+  hired:    'badge-hired',
+  rejected: 'badge-rejected',
+  archived: 'badge-archived',
+};
+
+const AVATAR_PALETTES = [
+  'bg-violet-100 text-violet-700',
+  'bg-blue-100 text-blue-700',
+  'bg-emerald-100 text-emerald-700',
+  'bg-amber-100 text-amber-700',
+  'bg-rose-100 text-rose-700',
+  'bg-indigo-100 text-indigo-700',
+  'bg-cyan-100 text-cyan-700',
+];
+
+function avatarPalette(name: string) {
+  const sum = [...name].reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return AVATAR_PALETTES[sum % AVATAR_PALETTES.length];
+}
 
 export default function CandidateListPage() {
   const role = localStorage.getItem('role') || 'reviewer';
 
   const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [total, setTotal]           = useState(0);
+  const [total,      setTotal]      = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState('');
+  const [loading,    setLoading]    = useState(true);
+  const [error,      setError]      = useState('');
 
   const [filters, setFilters] = useState<CandidateFilters>({
-    status: '',
-    role_applied: '',
-    skill: '',
-    keyword: '',
-    page: 1,
-    page_size: 12,
+    status: '', role_applied: '', skill: '', keyword: '', page: 1, page_size: 12,
   });
 
   const fetchCandidates = useCallback(async () => {
@@ -46,90 +65,94 @@ export default function CandidateListPage() {
     setFilters((prev) => ({ ...prev, ...updates, page: 1 }));
   }
 
-  function handlePageChange(page: number) {
-    setFilters((prev) => ({ ...prev, page }));
-  }
-
-
   return (
-    <div className="max-w-[1400px] mx-auto p-6 md:p-12 animate-[fade-up_0.6s_cubic-bezier(0.16,1,0.3,1)_forwards]">
-      <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+    <div className="p-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-text-primary">Candidates</h1>
-          <p className="text-sm text-text-secondary mt-1">
-            {loading ? 'Loading database…' : `${total} candidate${total !== 1 ? 's' : ''} found`}
+          <h1 className="text-xl font-semibold text-text-primary">Candidates</h1>
+          <p className="text-sm text-text-muted mt-0.5">
+            {loading ? 'Loading…' : `${total} total`}
           </p>
         </div>
         {role === 'admin' && (
           <Link to="/candidates/new" className="btn btn-primary" id="add-candidate-btn">
-            + Add Candidate
+            <Plus className="w-4 h-4" />
+            Add Candidate
           </Link>
         )}
       </div>
 
-      <FilterBar
-        filters={filters}
-        statusOptions={STATUS_OPTIONS}
-        onChange={handleFilterChange}
-      />
+      <FilterBar filters={filters} statusOptions={STATUS_OPTIONS} onChange={handleFilterChange} />
 
-      {error && <div className="bg-status-rej-bg text-status-rej-fg px-6 py-4 rounded-2xl text-sm font-medium mb-6">{error}</div>}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-6">
+          {error}
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-20">
-          <div className="w-8 h-8 border-4 border-border-light border-t-text-muted rounded-full animate-spin"></div>
+          <div className="w-5 h-5 border-2 border-border-strong border-t-accent rounded-full animate-spin" />
         </div>
       ) : candidates.length === 0 ? (
-        <div className="text-center py-24 px-6 bg-white rounded-3xl shadow-soft">
-          <div className="w-16 h-16 bg-bg-base rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">🔍</div>
-          <div className="text-lg font-bold mb-2">No candidates found</div>
-          <div className="text-sm text-text-secondary">Try adjusting your filters</div>
+        <div className="flex flex-col items-center justify-center py-20 card">
+          <div className="w-10 h-10 rounded-lg bg-bg-subtle flex items-center justify-center mb-3">
+            <Search className="w-5 h-5 text-text-muted" />
+          </div>
+          <p className="text-sm font-semibold text-text-primary">No candidates found</p>
+          <p className="text-sm text-text-muted mt-1">Try adjusting your filters</p>
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             {candidates.map((c) => (
               <Link
                 key={c.id}
                 to={`/candidates/${c.id}`}
-                className="bg-white rounded-3xl p-6 flex flex-col gap-5 no-underline transition-all duration-300 shadow-soft hover:shadow-float hover:-translate-y-1 group"
+                className="card p-5 flex flex-col gap-4 no-underline hover:border-border-strong hover:shadow-sm transition-all group"
                 id={`candidate-card-${c.id}`}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex gap-4 items-center">
-                    <div className="w-12 h-12 rounded-full bg-bg-base flex items-center justify-center font-bold text-text-primary shrink-0 transition-colors group-hover:bg-[#E8E8E8]">
+                {/* Avatar + name row */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${avatarPalette(c.name)}`}>
                       {getInitials(c.name)}
                     </div>
-                    <div>
-                      <div className="font-bold text-lg leading-tight mb-0.5 text-text-primary">{c.name}</div>
-                      <div className="text-xs text-text-muted">{c.email}</div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-text-primary text-sm truncate">{c.name}</p>
+                      <p className="text-xs text-text-muted truncate">{c.email}</p>
                     </div>
                   </div>
+                  <span className={`badge capitalize shrink-0 ${STATUS_BADGE[c.status] ?? 'badge-archived'}`}>
+                    {c.status}
+                  </span>
                 </div>
 
-                <div>
-                  <div className="text-sm font-medium text-text-primary mb-3">
-                    {c.role_applied}
-                  </div>
-                  {c.skills.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {c.skills.slice(0, 4).map((s) => (
-                        <span key={s} className="text-[11px] font-medium bg-[#F5F5F5] text-text-secondary px-2.5 py-1 rounded-full">{s}</span>
-                      ))}
-                      {c.skills.length > 4 && (
-                        <span className="text-[11px] font-medium bg-[#F5F5F5] text-text-secondary px-2.5 py-1 rounded-full">+{c.skills.length - 4}</span>
-                      )}
-                    </div>
-                  )}
-                </div>
+                {/* Role */}
+                <p className="text-sm text-text-secondary -mt-1">{c.role_applied}</p>
 
-                <div className="flex items-center justify-between pt-4 border-t border-border-light mt-auto text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${STATUS_DOT_COLORS[c.status] ?? 'bg-gray-400'}`} />
-                    <span className="font-medium text-text-secondary capitalize">{c.status}</span>
+                {/* Skills */}
+                {c.skills.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {c.skills.slice(0, 4).map((s) => (
+                      <span key={s} className="text-[11px] font-medium bg-bg-subtle text-text-muted px-2 py-0.5 rounded border border-border">
+                        {s}
+                      </span>
+                    ))}
+                    {c.skills.length > 4 && (
+                      <span className="text-[11px] font-medium bg-bg-subtle text-text-muted px-2 py-0.5 rounded border border-border">
+                        +{c.skills.length - 4}
+                      </span>
+                    )}
                   </div>
-                  <span className="text-text-muted">
-                    {c.scores.length} score{c.scores.length !== 1 ? 's' : ''}
+                )}
+
+                {/* Footer */}
+                <div className="flex items-center justify-between pt-3 border-t border-border text-xs text-text-muted mt-auto">
+                  <span>{c.scores.length} score{c.scores.length !== 1 ? 's' : ''}</span>
+                  <span className="text-accent font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                    View →
                   </span>
                 </div>
               </Link>
@@ -141,7 +164,7 @@ export default function CandidateListPage() {
             totalPages={totalPages}
             total={total}
             pageSize={filters.page_size || 12}
-            onChange={handlePageChange}
+            onChange={(page) => setFilters((prev) => ({ ...prev, page }))}
           />
         </>
       )}

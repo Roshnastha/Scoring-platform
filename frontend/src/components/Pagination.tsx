@@ -25,35 +25,29 @@ export default function Pagination({ page, totalPages, total, pageSize, onChange
     pages.push(totalPages);
   }
 
-  const btnBase = 'w-10 h-10 rounded-full bg-[#F9F9F9] border border-border-light text-text-secondary flex items-center justify-center transition-all hover:bg-gray-50 hover:text-text-primary active:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm';
+  const navBtn = 'w-8 h-8 flex items-center justify-center rounded-lg border border-border text-text-secondary hover:bg-bg-subtle hover:border-border-strong disabled:opacity-40 disabled:cursor-not-allowed transition-colors';
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mt-12 bg-white rounded-3xl p-4 px-6 shadow-soft">
-      <span className="text-sm font-medium text-text-secondary">
-        Showing <strong className="text-text-primary">{start}</strong>–<strong className="text-text-primary">{end}</strong> of <strong className="text-text-primary">{total}</strong>
+    <div className="flex items-center justify-between mt-6 pt-5 border-t border-border">
+      <span className="text-sm text-text-muted">
+        {start}–{end} of {total}
       </span>
 
-      <div className="flex items-center gap-1.5">
-        <button
-          className={btnBase}
-          onClick={() => onChange(page - 1)}
-          disabled={page === 1}
-          aria-label="Previous page"
-          id="pagination-prev"
-        >
+      <div className="flex items-center gap-1">
+        <button className={navBtn} onClick={() => onChange(page - 1)} disabled={page === 1} id="pagination-prev" aria-label="Previous">
           <ChevronLeft className="w-4 h-4" />
         </button>
 
         {pages.map((p, i) =>
           p === '…' ? (
-            <span key={`ellipsis-${i}`} className="text-text-muted px-1">…</span>
+            <span key={`e-${i}`} className="w-8 h-8 flex items-center justify-center text-text-muted text-sm">…</span>
           ) : (
             <button
               key={p}
-              className={`w-10 h-10 rounded-full font-bold text-sm flex items-center justify-center transition-all shadow-sm ${
+              className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
                 p === page
-                  ? 'bg-text-primary text-white border border-transparent shadow-md'
-                  : 'bg-[#F9F9F9] border border-border-light text-text-secondary hover:bg-gray-50 hover:text-text-primary active:bg-gray-100'
+                  ? 'bg-accent text-white'
+                  : 'text-text-secondary hover:bg-bg-subtle'
               }`}
               onClick={() => onChange(p as number)}
               id={`pagination-page-${p}`}
@@ -63,13 +57,7 @@ export default function Pagination({ page, totalPages, total, pageSize, onChange
           )
         )}
 
-        <button
-          className={btnBase}
-          onClick={() => onChange(page + 1)}
-          disabled={page === totalPages}
-          aria-label="Next page"
-          id="pagination-next"
-        >
+        <button className={navBtn} onClick={() => onChange(page + 1)} disabled={page === totalPages} id="pagination-next" aria-label="Next">
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>

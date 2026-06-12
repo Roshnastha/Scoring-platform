@@ -1,15 +1,15 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../api/auth';
-import { LogIn, Loader2 } from 'lucide-react';
+import { LogIn, Loader2, Layers } from 'lucide-react';
 import { getErrorMessage } from '../utils';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [email, setEmail]       = useState('');
+  const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError]       = useState('');
-  const [loading, setLoading]   = useState(false);
+  const [error,    setError]    = useState('');
+  const [loading,  setLoading]  = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -18,7 +18,7 @@ export default function LoginPage() {
     try {
       const data = await login(email, password);
       localStorage.setItem('token', data.access_token);
-      localStorage.setItem('role', data.role);
+      localStorage.setItem('role',  data.role);
       navigate('/candidates');
     } catch (err: unknown) {
       setError(getErrorMessage(err, 'Invalid email or password'));
@@ -28,63 +28,110 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-[#E8E8E8]">
-      <div className="w-full max-w-md bg-white rounded-[2rem] p-10 md:p-12 shadow-float relative overflow-hidden">
-
-        <div className="mb-10 text-center">
-          <div className="w-12 h-12 bg-bg-base rounded-full flex items-center justify-center mx-auto mb-6 shadow-inset-soft">
-            <div className="w-4 h-4 bg-accent-primary rounded-full" />
+    <div className="min-h-screen flex">
+      {/* Left branded panel */}
+      <div className="hidden lg:flex w-[420px] shrink-0 bg-slate-900 flex-col justify-between p-10">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center">
+            <Layers className="w-5 h-5 text-white" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-text-primary mb-1">TechKraft</h1>
-          <p className="text-sm font-medium text-text-secondary">Candidate Scoring Platform</p>
+          <span className="text-white font-semibold text-lg">TechKraft</span>
         </div>
 
-        <form className="flex flex-col gap-5" onSubmit={handleSubmit} id="login-form">
-          {error && <div className="bg-status-rej-bg text-status-rej-fg px-4 py-3 rounded-xl text-sm font-medium text-center">{error}</div>}
+        <div>
+          <h1 className="text-[2.25rem] font-bold text-white leading-tight mb-4">
+            Hire the right<br />
+            people,{' '}
+            <span className="text-accent">faster.</span>
+          </h1>
+          <p className="text-slate-400 text-sm leading-relaxed max-w-xs">
+            Structured scoring, real-time collaboration, and AI-powered insights — all in one place.
+          </p>
+        </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-text-secondary ml-1" htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              className="form-control"
-              placeholder="you@techkraft.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoFocus
-            />
+        <p className="text-slate-700 text-xs">© 2024 TechKraft</p>
+      </div>
+
+      {/* Right form panel */}
+      <div className="flex-1 flex items-center justify-center p-8 bg-bg-base">
+        <div className="w-full max-w-sm">
+          {/* Mobile logo */}
+          <div className="lg:hidden flex items-center gap-2.5 mb-10">
+            <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
+              <Layers className="w-4 h-4 text-white" />
+            </div>
+            <span className="font-semibold text-text-primary">TechKraft</span>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-text-secondary ml-1" htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              className="form-control"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+          <h2 className="text-2xl font-bold text-text-primary mb-1">Welcome back</h2>
+          <p className="text-sm text-text-muted mb-8">Sign in to your account to continue</p>
+
+          <form className="flex flex-col gap-4" onSubmit={handleSubmit} id="login-form">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-text-primary" htmlFor="email">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                className="form-control"
+                placeholder="you@techkraft.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoFocus
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-text-primary" htmlFor="password">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                className="form-control"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <button
+              id="login-btn"
+              type="submit"
+              className="btn btn-primary w-full py-2.5 mt-1"
+              disabled={loading}
+            >
+              {loading
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> Signing in…</>
+                : <><LogIn className="w-4 h-4" /> Sign in</>
+              }
+            </button>
+          </form>
+
+          <div className="mt-8 p-4 bg-bg-subtle border border-border rounded-lg">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted mb-2">
+              Demo credentials
+            </p>
+            <p className="text-sm text-text-secondary">
+              <code className="bg-white border border-border px-1.5 py-0.5 rounded text-xs font-mono">
+                admin@techkraft.com
+              </code>
+              <span className="mx-1.5 text-text-muted">/</span>
+              <code className="bg-white border border-border px-1.5 py-0.5 rounded text-xs font-mono">
+                admin123
+              </code>
+            </p>
           </div>
-
-          <button
-            id="login-btn"
-            type="submit"
-            className="btn btn-primary w-full mt-4 py-3.5 text-[15px] inline-flex items-center justify-center gap-2"
-            disabled={loading}
-          >
-            {loading
-              ? <><Loader2 className="w-4 h-4 animate-spin" /> Signing in…</>
-              : <><LogIn className="w-4 h-4" /> Sign In</>
-            }
-          </button>
-        </form>
-
-        <p className="text-center mt-8 text-xs text-text-muted font-medium bg-[#F9F9F9] py-3 rounded-xl shadow-inset-soft">
-          Admin: <span className="text-text-secondary font-bold">admin@techkraft.com</span> / <span className="text-text-secondary font-bold">admin123</span>
-        </p>
+        </div>
       </div>
     </div>
   );

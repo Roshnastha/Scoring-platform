@@ -1,42 +1,23 @@
-@import url('https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-bg-base: #F2F2F2; /* Soft industrial grey */
+  --color-bg-base: #F8FAFC;
   --color-bg-surface: #FFFFFF;
-  --color-bg-card: #FFFFFF;
-  
-  --color-text-primary: #1C1C1C;
-  --color-text-secondary: #5A5A5A;
-  --color-text-muted: #999999;
-  
-  /* Functional accents (Dieter Rams style) */
-  --color-accent-primary: #DE6B48; /* Muted orange */
-  --color-accent-hover: #C25636;
-  --color-accent-focus: #F4A261;
-  
-  /* Soft status colors */
-  --color-status-new-bg: #EAEFEC;
-  --color-status-new-fg: #4F6B55;
-  
-  --color-status-rev-bg: #FCF4E3;
-  --color-status-rev-fg: #9C7114;
-  
-  --color-status-hir-bg: #E3EEFC;
-  --color-status-hir-fg: #295E9A;
-  
-  --color-status-rej-bg: #FCE8E6;
-  --color-status-rej-fg: #963A32;
-  
-  --color-border-light: #EBEBEB;
-  --color-border-dark: #D4D4D4;
+  --color-bg-subtle: #F1F5F9;
 
-  --font-sans: 'Epilogue', sans-serif;
-  
-  /* Soft, realistic shadows simulating physical objects */
-  --shadow-soft: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 10px -2px rgba(0, 0, 0, 0.03);
-  --shadow-float: 0 20px 40px -10px rgba(0, 0, 0, 0.08), 0 8px 16px -4px rgba(0, 0, 0, 0.04);
-  --shadow-inset-soft: inset 0 2px 6px rgba(0,0,0,0.04);
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94A3B8;
+
+  --color-accent: #6366F1;
+  --color-accent-hover: #4F46E5;
+  --color-accent-subtle: #EEF2FF;
+
+  --color-border: #E2E8F0;
+  --color-border-strong: #CBD5E1;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 @layer base {
@@ -46,25 +27,41 @@
 }
 
 @layer components {
-  /* Form Controls - Input fields look like physical recessed slots */
   .form-control {
-    @apply bg-[#F9F9F9] border border-border-light text-text-primary px-4 py-3 rounded-xl transition-all text-sm outline-none shadow-inset-soft focus:bg-white focus:border-border-dark focus:ring-4 focus:ring-border-light/50;
+    @apply bg-white border border-border text-text-primary px-3 py-2 rounded-lg text-sm outline-none transition-colors
+           placeholder:text-text-muted
+           focus:border-accent focus:ring-2 focus:ring-accent/20;
   }
-  
-  /* Buttons - Pill shaped, raised like physical hardware buttons */
+
   .btn {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3 font-sans text-sm font-semibold rounded-full transition-all cursor-pointer border border-transparent;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer border border-transparent;
   }
   .btn-primary {
-    @apply bg-accent-primary text-white shadow-[0_4px_12px_rgba(222,107,72,0.3)] hover:bg-accent-hover hover:shadow-[0_6px_16px_rgba(222,107,72,0.4)] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none;
+    @apply bg-accent text-white hover:bg-accent-hover active:bg-accent-hover;
   }
   .btn-secondary {
-    @apply bg-white text-text-primary border-border-dark shadow-sm hover:bg-gray-50 hover:shadow active:bg-gray-100;
+    @apply bg-white text-text-primary border-border hover:bg-bg-subtle;
   }
   .btn-ghost {
-    @apply bg-transparent text-text-secondary hover:text-text-primary hover:bg-black/5 active:bg-black/10;
+    @apply text-text-secondary hover:text-text-primary hover:bg-bg-subtle;
+  }
+  .btn-danger {
+    @apply bg-white text-red-600 border border-red-200 hover:bg-red-50;
   }
   .btn:disabled {
-    @apply opacity-50 cursor-not-allowed transform-none shadow-none;
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold;
+  }
+  .badge-new      { @apply bg-blue-50 text-blue-700; }
+  .badge-reviewed { @apply bg-amber-50 text-amber-700; }
+  .badge-hired    { @apply bg-emerald-50 text-emerald-700; }
+  .badge-rejected { @apply bg-red-50 text-red-700; }
+  .badge-archived { @apply bg-slate-100 text-slate-500; }
+
+  .card {
+    @apply bg-white border border-border rounded-xl;
   }
 }

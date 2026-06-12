@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Navbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import CandidateListPage from './pages/CandidateListPage';
@@ -8,9 +8,9 @@ import CreateCandidatePage from './pages/CreateCandidatePage';
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="app-container">
-      <Navbar />
-      <main>{children}</main>
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <main className="flex-1 overflow-auto min-w-0">{children}</main>
     </div>
   );
 }
@@ -19,10 +19,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public */}
         <Route path="/login" element={<LoginPage />} />
 
-        {/* Protected */}
         <Route
           path="/candidates"
           element={
@@ -48,7 +46,6 @@ export default function App() {
           }
         />
 
-        {/* Default redirect */}
         <Route path="*" element={<Navigate to="/candidates" replace />} />
       </Routes>
     </BrowserRouter>
